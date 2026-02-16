@@ -1,3 +1,4 @@
+#pragma warning disable SA1116
 namespace DatabaseMultiLockBenchmark.Oracle;
 
 using System;
@@ -15,10 +16,11 @@ using Testcontainers.Oracle;
 public class Benchmarks
     : IAsyncDisposable
 {
-    private const int OracleContainerHostPort = 1532;
+    private const int OracleContainerHostPort = 1522;
     private static readonly string OracleContainerPassword = Guid.NewGuid().ToString();
 
     private static readonly Uri _dockerDaemonUri = new UriBuilder("http", "localhost", 2375).Uri;
+    private static readonly object _benchmarkBindVars = new { i_a = 1, i_b = 5 };
 
     private readonly OracleContainer _databaseContainer = new OracleBuilder("container-registry.oracle.com/database/free:latest-lite")
         .WithDockerEndpoint(_dockerDaemonUri)
@@ -51,6 +53,8 @@ public class Benchmarks
 
     private bool _disposedValue;
 
+    private OracleConnection? _persistentUserConnection = null;
+
     [GlobalSetup]
     public async Task GlobalSetup()
     {
@@ -82,6 +86,11 @@ public class Benchmarks
 
             await dbaConnection.ExecuteAsync($"""
                 grant create session, create table, create sequence, create procedure
+                to {_userConnectionBuilder.UserID};
+            """);
+
+            await dbaConnection.ExecuteAsync($"""
+                grant execute on sys.dbms_lock
                 to {_userConnectionBuilder.UserID};
             """);
         }
@@ -135,6 +144,8 @@ public class Benchmarks
     [IterationSetup]
     public void IterationSetup()
     {
+        _persistentUserConnection = new OracleConnection(_userConnectionBuilder.ConnectionString);
+        _persistentUserConnection.Open();
         TruncateBenchmarkTables();
     }
 
@@ -142,12 +153,151 @@ public class Benchmarks
     public void IterationCleanup()
     {
         TruncateBenchmarkTables();
+        _persistentUserConnection?.Close();
+        _persistentUserConnection?.Dispose();
     }
 
     [Benchmark]
-    public async ValueTask EmptyBenchmark()
+    public async ValueTask Solution_1_Insert_Select()
     {
-        await ValueTask.CompletedTask;
+        ArgumentNullException.ThrowIfNull(_persistentUserConnection);
+
+        await _persistentUserConnection.ExecuteAsync("""
+            declare
+                i_a             t_data.a%type := :i_a;
+                i_b             t_data.b%type := :i_b;
+                o_id            t_data.id%type;
+            begin
+                insert into t_data (a, b)
+                values (i_a, i_b)
+                returning id into o_id;
+            excption
+                when dup_val_on_index then
+                    select id
+                    into o_id
+                    from t_data
+                    where a = i_a and b = i_b;
+            end;
+            """,
+            _benchmarkBindVars
+        );
+    }
+
+    [Benchmark]
+    public async ValueTask Solution_2_Select_Insert_Select()
+    {
+        ArgumentNullException.ThrowIfNull(_persistentUserConnection);
+
+        await _persistentUserConnection.ExecuteAsync("""
+            declare
+                i_a             t_data.a%type := :i_a;
+                i_b             t_data.b%type := :i_b;
+                o_id            t_data.id%type;
+            begin
+                select id
+                into o_id
+                from t_data
+                where a = i_a and b = i_b;
+            exception
+                when no_data_found then
+                    begin
+                        insert into t_data (a, b)
+                        values (i_a, i_b)
+                        returning id into o_id;
+                    excption
+                        when dup_val_on_index then
+                            select id
+                            into o_id
+                            from t_data
+                            where a = i_a and b = i_b;
+                    end;
+            end;
+            """,
+            _benchmarkBindVars
+        );
+    }
+
+    [Benchmark]
+    public async ValueTask Solution_3_LockViaDbmsLock()
+    {
+        ArgumentNullException.ThrowIfNull(_persistentUserConnection);
+
+        await _persistentUserConnection.ExecuteAsync("""
+            declare
+                i_a             t_data.a%type := :i_a;
+                i_b             t_data.b%type := :i_b;
+                o_id            t_data.id%type;
+
+                l_lock_handle           varchar2(128);
+                l_lock_request_result   integer;
+            begin
+                dbms_lock.allocate_unique_autonomous(
+                    lockname => 'a:'||l_a||'|b:'||l_b,
+                    lockhandle => l_lock_handle
+                );
+
+                -- https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html#GUID-CC3AEC00-CBFF-45DD-99C3-C7A312C0213E
+                l_lock_request_result := dbms_lock.request(
+                    lockhandle => l_lock_handle,
+                    release_on_commit => true
+                );
+
+                if l_lock_request_result not in (0, 4) then
+                    raise_application_error(-20000, 'Failed to acquire lock on record (a = '||l_a||', b = '||l_b||') with result of '||l_lock_request_result);
+                end if;
+
+                begin
+                    select id
+                    into o_id
+                    from t_data
+                    where a = l_a and b = l_b;
+                exception
+                    when no_data_found then
+                        insert into t_data (a, b)
+                        values (l_a, l_b)
+                        returning id into o_id;
+                end;
+            end;
+            """,
+            _benchmarkBindVars
+        );
+    }
+
+    [Benchmark]
+    public async ValueTask Solution_4_LockViaLocksTable()
+    {
+        ArgumentNullException.ThrowIfNull(_persistentUserConnection);
+
+        await _persistentUserConnection.ExecuteAsync("""
+            declare
+                i_a             t_data.a%type := :i_a;
+                i_b             t_data.b%type := :i_b;
+                o_id            t_data.id%type;
+
+                l_lock_handle           varchar2(128);
+                l_lock_request_result   integer;
+            begin
+                insert into t_data_locks (a, b)
+                values (i_a, i_b);
+
+                begin
+                    select id
+                    into o_id
+                    from t_data
+                    where a = l_a and b = l_b;
+                exception
+                    when no_data_found then
+                        insert into t_data (a, b)
+                        values (l_a, l_b)
+                        returning id into o_id;
+                end;
+
+                delete from t_data_locks
+                where a = i_a and b = i_b;
+            end;
+            """,
+            _benchmarkBindVars
+        );
     }
 
     protected virtual async ValueTask DisposeAsync(bool disposing)
