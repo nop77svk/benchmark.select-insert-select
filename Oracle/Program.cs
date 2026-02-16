@@ -1,17 +1,18 @@
-namespace Oracle;
+namespace DatabaseMultiLockBenchmark.Oracle;
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 using BenchmarkDotNet.Running;
 
-using DatabaseMultiLockBenchmark.Oracle;
-
 internal static class Program
 {
-    internal static void Main(string[] args)
+    internal static async Task Main(string[] args)
     {
+        await using ContainerFactory containerFactory = new ContainerFactory();
+        await using IAsyncDisposable containerStarted = await containerFactory.StartUpContainer();
+
+        StaticGlobalContext.UserConnectionString = containerFactory.UserConnectionString;
         BenchmarkRunner.Run<Benchmarks>();
     }
 }

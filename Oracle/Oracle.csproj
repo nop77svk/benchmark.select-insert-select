@@ -3,7 +3,9 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<IsPackable>false</IsPackable>
-		<StartupObject>Oracle.Program</StartupObject>
+		<StartupObject>DatabaseMultiLockBenchmark.Oracle.Program</StartupObject>
+		<RootNamespace>DatabaseMultiLockBenchmark.Oracle</RootNamespace>
+		<AssemblyName>DatabaseMultiLockBenchmark.Oracle</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>
