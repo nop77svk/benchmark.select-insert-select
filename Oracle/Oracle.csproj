@@ -3,15 +3,16 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<IsPackable>false</IsPackable>
+		<StartupObject>Oracle.Program</StartupObject>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-		<PackageReference Include="BenchmarkDotNet.TestAdapter" Version="0.15.8" />
+		<PackageReference Include="Dapper" Version="2.1.66" />
 		<PackageReference Include="Testcontainers.Oracle" Version="4.10.0" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.100" />
 	</ItemGroup>
-
+<!--
 	<ItemGroup Label="unit test support">
 		<PackageReference Include="coverlet.collector" Version="*" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
@@ -20,9 +21,5 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="*" />
 		<Using Include="NUnit.Framework" />
 	</ItemGroup>
-
-	<PropertyGroup>
-		<EnableNUnitRunner>true</EnableNUnitRunner>
-	</PropertyGroup>
-
+-->
 </Project>
