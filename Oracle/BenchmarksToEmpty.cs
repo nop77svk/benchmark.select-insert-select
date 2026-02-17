@@ -50,15 +50,15 @@ public class BenchmarksToEmpty
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution2SelectInsertSelect);
 
     [Benchmark]
-    public void Solution3_AppLockSelectInsert()
+    public void Solution3_SelectInsert_WithPlsqlLock()
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution3AppLockSelectInsert);
 
     [Benchmark]
-    public void Solution4_DbLockSelectInsert()
+    public void Solution4_SelectInsert_WithDatabaseLock()
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution4DbLockSelectInsertSelect);
 
     [Benchmark]
-    public void Solution5_SelectInsertWithDotNetLocking()
+    public void Solution5_SelectInsert_WithDotNetLock()
     {
         _solution0Semaphore.Wait();
         try
