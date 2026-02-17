@@ -18,7 +18,10 @@ public class OracleBenchmarkFunctions
     internal static readonly string SqlSolution3AppLockSelectInsert = ReadSqlTestCaseResource(@"solution3-app-lock-select-insert.sql");
     internal static readonly string SqlSolution4DbLockSelectInsertSelect = ReadSqlTestCaseResource(@"solution4-db-lock-select-insert.sql");
 
-    private static readonly object _benchmarkBindVars = new { i_a = 1, i_b = 5 };
+    private const int BindVarA = 1;
+    private const int BindVarB = 5;
+
+    private static readonly object _benchmarkBindVars = new { i_a = BindVarA, i_b = BindVarB };
     private readonly OracleConnection _persistentUserConnection;
     private bool _disposedValue;
 
@@ -39,6 +42,31 @@ public class OracleBenchmarkFunctions
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    internal void PopulateTestTableWithData(int maxA, int maxB)
+    {
+        _persistentUserConnection.Execute("""
+            insert --+ append
+                into t_data (a, b)
+            with A as (
+                select --+ no_merge
+                    level as a
+                from dual
+                connect by level <= :i_max_a
+            ),
+            B as (
+                select --+ no_merge
+                    level as b
+                from dual
+                connect by level <= :i_max_b
+            )
+            select A.a, B.b
+            from A cross join B
+            where A.a != :i_a or B.b != :i_b
+            """,
+            new { i_max_a = maxA, i_max_b = maxB, i_a = BindVarA, i_b = BindVarB }
+        );
     }
 
     internal void InitialiseTestData()
@@ -110,5 +138,5 @@ public class OracleBenchmarkFunctions
     }
 
     private static string ReadSqlTestCaseResource(string testCaseFileName)
-        => ReadEmbeddedResource($"{typeof(BenchmarksToEmpty).Namespace}.TestCases.{testCaseFileName}");
+        => ReadEmbeddedResource($"{typeof(BenchmarksForInsertOverEmptyTable).Namespace}.TestCases.{testCaseFileName}");
 }

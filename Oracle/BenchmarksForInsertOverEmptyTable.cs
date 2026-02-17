@@ -7,20 +7,20 @@ using System.Threading;
 using BenchmarkDotNet.Attributes;
 
 [InProcess]
-public class BenchmarksToEmpty
+public class BenchmarksForInsertOverEmptyTable
     : IDisposable
 {
     protected readonly OracleBenchmarkFunctions _oracleBenchmarkFunctions;
 
     private bool _disposedValue;
 
-    public BenchmarksToEmpty()
+    public BenchmarksForInsertOverEmptyTable()
     {
         _oracleBenchmarkFunctions = new OracleBenchmarkFunctions();
     }
 
     [GlobalSetup]
-    public void BenchmarkSetUp()
+    public virtual void BenchmarkSetUp()
     {
         _oracleBenchmarkFunctions.TruncateBenchmarkTables();
     }
@@ -31,6 +31,7 @@ public class BenchmarksToEmpty
         _oracleBenchmarkFunctions.TruncateBenchmarkTables();
     }
 
+    [IterationSetup]
     public virtual void IterationSetup()
     {
     }
