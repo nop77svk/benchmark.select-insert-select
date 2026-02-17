@@ -36,7 +36,7 @@ public class BenchmarksForInsertOverEmptyTable
     {
     }
 
-    [Benchmark]
+    [Benchmark(Baseline = true)]
     public void Solution0_TheWrongOne_SelectInsert()
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution0SelectInsert);
 
@@ -46,7 +46,7 @@ public class BenchmarksForInsertOverEmptyTable
     public void Solution1_InsertSelect()
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution1InsertSelect);
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public void Solution2_SelectInsertSelect()
         => _oracleBenchmarkFunctions.ExecuteTestCaseWithAutoRollback(OracleBenchmarkFunctions.SqlSolution2SelectInsertSelect);
 

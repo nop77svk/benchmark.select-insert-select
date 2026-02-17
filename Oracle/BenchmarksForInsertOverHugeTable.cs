@@ -2,12 +2,13 @@ namespace DatabaseMultiLockBenchmark.Oracle;
 
 using BenchmarkDotNet.Attributes;
 
-internal class BenchmarksForInsertOverHugeTable
+[InProcess]
+public class BenchmarksForInsertOverHugeTable
     : BenchmarksForInsertOverEmptyTable
 {
-    [GlobalSetup]
     public override void BenchmarkSetUp()
     {
-        _oracleBenchmarkFunctions.PopulateTestTableWithData(1000, 1000);
+        base.BenchmarkSetUp();
+        _oracleBenchmarkFunctions.PopulateTestTableWithData(10000, 10000);
     }
 }

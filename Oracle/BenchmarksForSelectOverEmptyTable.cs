@@ -6,7 +6,6 @@ using BenchmarkDotNet.Attributes;
 public class BenchmarksForSelectOverEmptyTable
     : BenchmarksForInsertOverEmptyTable
 {
-    [IterationSetup]
     public override void IterationSetup()
     {
         _oracleBenchmarkFunctions.InitialiseTestData();
