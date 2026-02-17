@@ -20,6 +20,7 @@ public class ContainerFactory
     public int OracleContainerHostPort { get; init; } = 1522;
     public string OracleContainerPassword { get; init; } = Guid.NewGuid().ToString();
     public string OracleBenchmarkUserName { get; init; } = "BENCHMARK_USER";
+    public string OracleBenchmarkUserPassword { get; init; } = "Benchmark123";
 
     public Uri DockerDaemonUri => new UriBuilder("http", DockerDaemonHost, DockerDaemonPort).Uri;
 
@@ -59,7 +60,7 @@ public class ContainerFactory
         {
             DataSource = $"127.0.0.1:{OracleContainerHostPort}/FREEPDB1",
             UserID = OracleBenchmarkUserName,
-            Password = OracleContainerPassword
+            Password = OracleBenchmarkUserPassword
         });
     }
 
@@ -71,6 +72,8 @@ public class ContainerFactory
         await _databaseContainer.Value.StartAsync();
 
         await Console.Out.WriteLineAsync("Setting up benchmark DB schema");
+
+        Console.WriteLine($"Connecting to: {DbaConnectionString}");
         await using (var dbaConnection = new OracleConnection(DbaConnectionString))
         {
             await dbaConnection.OpenAsync();
@@ -87,7 +90,7 @@ public class ContainerFactory
             await Console.Out.WriteLineAsync(" * Create test user");
             await dbaConnection.ExecuteAsync($"""
                 create user "{OracleBenchmarkUserName}"
-                    identified by "{OracleContainerPassword}"
+                    identified by "{OracleBenchmarkUserPassword}"
                 default tablespace benchmark_tbs
                 quota unlimited on benchmark_tbs
                 temporary tablespace temp
@@ -105,6 +108,7 @@ public class ContainerFactory
             """);
         }
 
+        Console.WriteLine($"Connecting to: {UserConnectionString}");
         await using (var userConnection = new OracleConnection(UserConnectionString))
         {
             await userConnection.OpenAsync();
