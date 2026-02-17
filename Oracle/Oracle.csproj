@@ -8,10 +8,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="TestCases\solution1-insert-select.sql" />
+	  <None Remove="TestCases\solution2-select-insert-select.sql" />
+	  <None Remove="TestCases\solution3-app-lock-select-insert.sql" />
+	  <None Remove="TestCases\solution4-db-lock-select-insert.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
 		<PackageReference Include="Dapper" Version="2.1.66" />
 		<PackageReference Include="Testcontainers.Oracle" Version="4.10.0" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.100" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="TestCases\solution1-insert-select.sql" />
+	  <EmbeddedResource Include="TestCases\solution2-select-insert-select.sql" />
+	  <EmbeddedResource Include="TestCases\solution3-app-lock-select-insert.sql" />
+	  <EmbeddedResource Include="TestCases\solution4-db-lock-select-insert.sql" />
 	</ItemGroup>
 <!--
 	<ItemGroup Label="unit test support">
