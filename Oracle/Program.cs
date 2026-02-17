@@ -13,6 +13,7 @@ internal static class Program
         await using IAsyncDisposable containerStarted = await containerFactory.StartUpContainer();
 
         StaticGlobalContext.UserConnectionString = containerFactory.UserConnectionString;
-        BenchmarkRunner.Run<Benchmarks>();
+        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
+            .RunAllJoined();
     }
 }

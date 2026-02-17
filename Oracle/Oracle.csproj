@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="TestCases\solution0-select-insert.sql" />
 	  <None Remove="TestCases\solution1-insert-select.sql" />
 	  <None Remove="TestCases\solution2-select-insert-select.sql" />
 	  <None Remove="TestCases\solution3-app-lock-select-insert.sql" />
@@ -22,6 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="TestCases\solution0-select-insert.sql" />
 	  <EmbeddedResource Include="TestCases\solution1-insert-select.sql" />
 	  <EmbeddedResource Include="TestCases\solution2-select-insert-select.sql" />
 	  <EmbeddedResource Include="TestCases\solution3-app-lock-select-insert.sql" />
