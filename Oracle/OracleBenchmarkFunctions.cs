@@ -44,8 +44,11 @@ public class OracleBenchmarkFunctions
         GC.SuppressFinalize(this);
     }
 
-    internal void PopulateTestTableWithData(int maxA, int maxB)
+    internal void PopulateTestTableWithData(int maxRows)
     {
+        int maxA = (int)Math.Sqrt(maxRows);
+        int maxB = (int)Math.Sqrt(maxRows);
+
         _persistentUserConnection.Execute("""
             insert --+ append
                 into t_data (a, b)

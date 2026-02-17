@@ -2,7 +2,7 @@ namespace DatabaseMultiLockBenchmark.Oracle;
 
 using BenchmarkDotNet.Attributes;
 
-[InProcess]
+[Config(typeof(BenchmarksConfig))]
 public class BenchmarksForSelectOverEmptyTable
     : BenchmarksForInsertOverEmptyTable
 {

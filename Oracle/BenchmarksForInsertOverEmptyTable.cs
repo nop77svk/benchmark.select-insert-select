@@ -6,7 +6,7 @@ using System.Threading;
 
 using BenchmarkDotNet.Attributes;
 
-[InProcess]
+[Config(typeof(BenchmarksConfig))]
 public class BenchmarksForInsertOverEmptyTable
     : IDisposable
 {
